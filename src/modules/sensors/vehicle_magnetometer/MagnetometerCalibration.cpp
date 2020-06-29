@@ -122,6 +122,8 @@ void MagnetometerCalibration::ParametersUpdate()
 
 		_enabled = (enabled_val == 1);
 
+		Vector3f offdiagonal{};
+
 		for (int axis = 0; axis < 3; axis++) {
 			char axis_char = 'X' + axis;
 
@@ -133,10 +135,26 @@ void MagnetometerCalibration::ParametersUpdate()
 			sprintf(str, "CAL_%s%u_%cSCALE", SensorString(), calibration_index, axis_char);
 			param_get(param_find(str), &_scale(axis, axis));
 
+			// off diagonal factors
+			sprintf(str, "CAL_%s%u_%cODIAG", SensorString(), calibration_index, axis_char);
+			param_get(param_find(str), &offdiagonal(axis));
+
 			// power compensation
 			sprintf(str, "CAL_%s%u_%cCOMP", SensorString(), calibration_index, axis_char);
 			param_get(param_find(str), &_power_compensation(axis));
 		}
+
+		// off diagonal X
+		_scale(0, 1) = offdiagonal(0);
+		_scale(1, 0) = offdiagonal(0);
+
+		// off diagonal Y
+		_scale(0, 2) = offdiagonal(1);
+		_scale(2, 0) = offdiagonal(1);
+
+		// off diagonal Z
+		_scale(2, 3) = offdiagonal(2);
+		_scale(3, 2) = offdiagonal(2);
 
 	} else {
 		_enabled = true;
